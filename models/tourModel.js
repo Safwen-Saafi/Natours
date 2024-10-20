@@ -160,7 +160,7 @@ tourSchema.pre('aggregate', function(next) {
 });
 
 
-// !Pre miidleware to pupulate all of the routes
+// !Pre middleware to pupulate all of the routes, which mean sto replace the simple id with the whole document
 tourSchema.pre(/^find/, function(next) {
   this.populate({
     path: 'guides',
