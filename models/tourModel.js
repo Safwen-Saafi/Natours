@@ -122,6 +122,17 @@ tourSchema.virtual('durationWeeks').get(function() {
   return this.duration / 7;
 });
 
+
+
+
+// !Virtual populate
+tourSchema.virtual('reviews', {
+  ref: 'Review', //Name of the model we want to reference
+  foreignField: 'tour', //We specify the id of the tour in the review model to connect
+  localField: '_id' //Where the id is sored in this model
+});
+
+
 // !DOCUMENT MIDDLEWARE: runs before .save() and .create()
 tourSchema.pre('save', function(next) {
   this.slug = slugify(this.name, { lower: true });
@@ -160,7 +171,7 @@ tourSchema.pre('aggregate', function(next) {
 });
 
 
-// !Pre middleware to pupulate all of the routes, which mean sto replace the simple id with the whole document
+// !Pre middleware to pupulate all of the routes, which means to replace the simple id with the whole document
 tourSchema.pre(/^find/, function(next) {
   this.populate({
     path: 'guides',
