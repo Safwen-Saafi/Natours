@@ -4,57 +4,55 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
 const userSchema = new mongoose.Schema({
-    name:{
-        type : String,
-        required :[true, 'Please provide a name'],
+  name: {
+    type: String,
+    required: [true, 'Please provide a name'],
+  },
+  email: {
+    type: String,
+    required: [true, 'Please provide an email'],
+    lowercase: true,
+    validate: [validator.isEmail, 'Please provide a valid email !'],
+    unique: true,
+  },
+  role: {
+    type: String,
+    enum: ['user', 'guide', 'lead-guide', 'admin'],
+    default: 'user',
+  },
+  photo: {
+    type: String,
+    default: 'defaultUser.png',
+  },
+  password: {
+    type: String,
+    required: [true, 'Please provide a password!'],
+    minlength: 8,
+    select: false,
+  },
+  passwordConfirm: {
+    type: String,
+    required: [true, 'Please Confirm your password'],
+    validate: {
+      // This only works on CREATE and SAVE!!!
+      validator: function (el) {
+        return el === this.password;
+      },
+      message: 'Passwords are not the same!',
     },
-    email : {
-        type : String,
-        required : [true, 'Please provide an email'],
-        lowercase: true,
-        validate: [validator.isEmail, 'Please provide a valid email !'],
-        unique : true
-
-    },
-    role: {
-      type: String,
-      enum: ['user', 'guide', 'lead-guide', 'admin'],
-      default: 'user'
-    },
-    photo : {
-        type : String,
-        default : "defaultUser.png",
-    },
-    password:{
-        type : String,
-        required: [true,'Please provide a password!'],
-        minlength: 8,
-        select: false 
-    },
-    passwordConfirm :{
-        type : String,
-        required:[true, 'Please Confirm your password'],
-        validate: {
-          // This only works on CREATE and SAVE!!!
-          validator: function(el) {
-            return el === this.password;
-          },
-          message: 'Passwords are not the same!'
-        }
-    },
-    passwordChangedAt: Date,
-    passwordResetToken: String,
-    passwordResetExpires: Date,
-    active: {
-      type: Boolean,
-      default: true,
-      select: false
-    }
+  },
+  passwordChangedAt: Date,
+  passwordResetToken: String,
+  passwordResetExpires: Date,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
 });
 
-
 // !Middleware to hash password before saving it
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   // Only run this function if password was actually modified
   if (!this.isModified('password')) return next();
 
@@ -66,17 +64,15 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
-
 // !Hide all of the deleted accounts, actually they are hided from the user not deleted
-userSchema.pre(/^find/, function(next) {
+userSchema.pre(/^find/, function (next) {
   // this points to the current query
   this.find({ active: { $ne: false } });
   next();
 });
 
-
 // !Modify the changePasswordAt
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function (next) {
   // this.new don't apply to a new document
   if (!this.isModified('password') || this.isNew) return next();
   // To ensure that the token is always created after the password has been changed
@@ -84,19 +80,16 @@ userSchema.pre('save', function(next) {
   next();
 });
 
-
-
 // !Middleware to compare paswords in login, it's an instance method available in all documents
-userSchema.methods.correctPassword = async function(
+userSchema.methods.correctPassword = async function (
   candidatePassword,
   userPassword
 ) {
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
-
 // !Returns true if the password has been changed after the issue of the JWT token
-userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   if (this.passwordChangedAt) {
     // change the changeddate format to ms
     const changedTimestamp = parseInt(
@@ -110,10 +103,8 @@ userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
   return false;
 };
 
-
-
 // !Creates the password reset token sent via main
-userSchema.methods.createPasswordResetToken = function() {
+userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString('hex');
   //the token stored in the database gets hashed for security
   this.passwordResetToken = crypto
@@ -125,9 +116,6 @@ userSchema.methods.createPasswordResetToken = function() {
   return resetToken;
 };
 
-
-
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;
-
