@@ -125,6 +125,7 @@ tourSchema.virtual('durationWeeks').get(function () {
 // !These are the indexes
 tourSchema.index({ price: 1, ratingsAverage: -1 });
 tourSchema.index({ slug: 1 });
+tourSchema.index({ startLocation: '2dsphere' });
 
 // !Virtual populate
 tourSchema.virtual('reviews', {
@@ -164,11 +165,11 @@ tourSchema.post(/^find/, function (docs, next) {
 
 // !AGGREGATION MIDDLEWARE
 // for any aggregation pipeline { $group: { _id: "$difficulty", avgPrice: { $avg: "$price" } } }
-tourSchema.pre('aggregate', function (next) {
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
-  console.log(this.pipeline());
-  next();
-});
+// tourSchema.pre('aggregate', function (next) {
+//   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+//   console.log(this.pipeline());
+//   next();
+// });
 
 // !Pre middleware to pupulate all of the routes, which means to replace the simple id with the whole document
 tourSchema.pre(/^find/, function (next) {
