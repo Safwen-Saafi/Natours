@@ -1,7 +1,6 @@
+const path = require('path');
 const express = require('express');
 const morgan = require('morgan'); //Middleware logger
-
-
 const rateLimit = require('express-rate-limit'); //Limits API requests per user
 const helmet = require('helmet'); //Sets various HTTP headers to protect against common vulnerabilities.
 const mongoSanitize = require('express-mongo-sanitize');  //Prevents MongoDB query injection attacks by removing keys containing $ or . from user-supplied data.
@@ -13,8 +12,12 @@ const globalErrorHandler = require('./controllers/errorController');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
+const viewRouter = require('./routes/viewRoutes');
 
 const app = express();
+
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
 
 // 1) GLOBAL MIDDLEWARES
 // Set security HTTP headers
@@ -67,6 +70,7 @@ app.use((req, res, next) => {
 });
 
 // 3) ROUTES
+app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/reviews', reviewRouter);
 app.use('/api/v1/users', userRouter);
