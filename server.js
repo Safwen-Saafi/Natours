@@ -11,22 +11,23 @@ process.on('uncaughtException', err => {
 dotenv.config({ path: './.env' });
 const app = require('./app');
 
-
-// console.log(process.env); Logs all of the env variables running in the process
+// Logs all of the env variables running in the process
+// console.log(process.env);
 //The output should be development
 // console.log(app.get('env')); 
 
-//Mongoose
+// Replaces the PASSWORD placeholder with the real value
 const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
   process.env.DATABASE_PASSWORD
 );
+
+//Mongoose
 mongoose
   .connect(DB)
   .then(() => console.log('Connection to DB successfully done !'));
+
 const port = 3000;
-
-
 
 app.listen(port, () => {
   console.log(`Listening on port: ${port}...`);

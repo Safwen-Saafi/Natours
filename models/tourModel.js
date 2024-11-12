@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
-// const validator = require('validator');
+const validator = require('validator');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -11,7 +11,13 @@ const tourSchema = new mongoose.Schema(
       trim: true,
       maxlength: [40, 'A tour name must have less or equal then 40 characters'],
       minlength: [10, 'A tour name must have more or equal then 10 characters'],
-      // validate: [validator.isAlpha, 'Tour name must only contain characters']
+      validate: {
+        validator: function (v) {
+          return validator.isAlpha(v, 'en-US', { ignore: ' -' });
+        },
+        message:
+          'Tour name must only contain alphabetic characters, spaces, or hyphens',
+      },
     },
     slug: String,
     duration: {
@@ -81,27 +87,69 @@ const tourSchema = new mongoose.Schema(
       default: false,
     },
     startLocation: {
-      // GeoJSON
+      // Geo JSON
       type: {
         type: String,
         default: 'Point',
-        enum: ['Point'],
+        enum: {
+          values: ['Point'],
+          message: 'Start location type must be "Point"',
+        },
       },
-      coordinates: [Number],
-      address: String,
-      description: String,
+      coordinates: {
+        type: [Number],
+        required: [true, 'Start location coordinates are required'],
+        validate: {
+          validator: function (val) {
+            return val.length === 2;
+          },
+          message:
+            'Coordinates should have exactly 2 elements (longitude and latitude)',
+        },
+      },
+      address: {
+        type: String,
+        required: [true, 'Start location address is required'],
+      },
+      description: {
+        type: String,
+        required: [true, 'Start location description is required'],
+      },
     },
     locations: [
       {
         type: {
           type: String,
           default: 'Point',
-          enum: ['Point'],
+          enum: {
+            values: ['Point'],
+            message: 'Location type must be "Point"',
+          },
+          required: [true, 'Location type is required'],
         },
-        coordinates: [Number],
-        address: String,
-        description: String,
-        day: Number,
+        coordinates: {
+          type: [Number],
+          required: [true, 'Location coordinates are required'],
+          validate: {
+            validator: function (val) {
+              return val.length === 2;
+            },
+            message:
+              'Coordinates should have exactly 2 elements (longitude and latitude)',
+          },
+        },
+        address: {
+          type: String,
+          required: [true, 'Location address is required'],
+        },
+        description: {
+          type: String,
+          required: [true, 'Location description is required'],
+        },
+        day: {
+          type: Number,
+          required: [true, 'Location day is required'],
+        },
       },
     ],
     guides: [
@@ -117,38 +165,36 @@ const tourSchema = new mongoose.Schema(
   }
 );
 
-//Just a simple example on how to ceate a virtual field
+// Custom validation to ensure at least one location is found per tour
+tourSchema.path('locations').validate(function (value) {
+  return value && value.length > 0;
+}, 'A tour must have at least one location to pass by');
+
+//Just a simple example on how to create a virtual field
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
-// !These are the indexes
+// !These are the indexes, optimize query performance
 tourSchema.index({ price: 1, ratingsAverage: -1 });
 tourSchema.index({ slug: 1 });
 tourSchema.index({ startLocation: '2dsphere' });
 
-// !Virtual populate
+// !Virtual populate, this is a one to many referencing, parent referencing, the tour ids are in the review model and we are referencing them
+// It doesn't physically store a reference to reviews in the Tour document; instead, it creates a virtual field that,
+// when queried, will dynamically pull in related Review documents based on the tour reference in the Review model.
 tourSchema.virtual('reviews', {
   ref: 'Review', //Name of the model we want to reference
   foreignField: 'tour', //We specify the id of the tour in the review model to connect
   localField: '_id', //Where the id is stored in this model to match it with the previous field
 });
 
-// !DOCUMENT MIDDLEWARE: runs before .save() and .create()
+// !DOCUMENT MIDDLEWARE:
+// this middleware runs before .save() and .create()
 tourSchema.pre('save', function (next) {
   this.slug = slugify(this.name, { lower: true });
   next();
 });
-
-// tourSchema.pre('save', function(next) {
-//   console.log('Will save document...');
-//   next();
-// });
-
-// tourSchema.post('save', function(doc, next) {
-//   console.log(doc);
-//   next();
-// });
 
 // !QUERY MIDDLEWARE
 // any query that starts with find
@@ -158,24 +204,17 @@ tourSchema.pre(/^find/, function (next) {
   next();
 });
 
-tourSchema.post(/^find/, function (docs, next) {
+tourSchema.post(/^find/, function (next) {
   console.log(`Query took ${Date.now() - this.start} milliseconds!`);
   next();
 });
 
-// !AGGREGATION MIDDLEWARE
-// for any aggregation pipeline { $group: { _id: "$difficulty", avgPrice: { $avg: "$price" } } }
-// tourSchema.pre('aggregate', function (next) {
-//   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
-//   console.log(this.pipeline());
-//   next();
-// });
-
 // !Pre middleware to pupulate all of the routes, which means to replace the simple id with the whole document
+// explicitly store the ObjectIds in the guides array.
 tourSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'guides',
-    select: '-__v -passwordChangedAt',
+    select: '-__v -passwordChangedAt', // Fields to exclude
   });
 
   next();
