@@ -14,7 +14,7 @@ exports.aliasTopTours = (req, res, next) => {
 
 
 exports.getAllTours = factory.getAll(Tour);
-exports.getTour = factory.getOne(Tour, { path: 'reviews' });
+exports.getTour = factory.getOne(Tour, { path: 'reviews' }); // path : populate the reviews field of the Tour model
 exports.createTour = factory.createOne(Tour);
 exports.updateTour = factory.updateOne(Tour);
 exports.deleteTour = factory.deleteOne(Tour);
@@ -177,7 +177,7 @@ exports.getDistances = catchAsync(async (req, res, next) => {
           type: 'Point',
           coordinates: [lng * 1, lat * 1]
         },
-        distanceField: 'distance',
+        distanceField: 'distance', // name of the field that will contain the calculated distance
         distanceMultiplier: multiplier
       }
     },

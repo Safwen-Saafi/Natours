@@ -205,11 +205,13 @@ tourSchema.pre(/^find/, function (next) {
 });
 
 tourSchema.post(/^find/, function (next) {
-  console.log(`Query took ${Date.now() - this.start} milliseconds!`);
-  next();
+  // Set a 300ms delay before logging the query duration
+  setTimeout(() => {
+    console.log(`Query took ${Date.now() - this.start - 300} milliseconds!`);
+  }, 300); // 300 milliseconds delay, why I used this, because the morgan logger is logged after this message, and I want the inverse
 });
 
-// !Pre middleware to pupulate all of the routes, which means to replace the simple id with the whole document
+// !Pre middleware to pupulate all of the guides, which means to replace the simple id with the whole document
 // explicitly store the ObjectIds in the guides array.
 tourSchema.pre(/^find/, function (next) {
   this.populate({
