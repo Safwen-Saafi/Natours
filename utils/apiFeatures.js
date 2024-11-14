@@ -3,7 +3,7 @@ class APIFeatures {
     this.query = query;
     this.queryString = queryString;
   }
-
+  // Example of a full query: /api/v1/tours?sort=-price&fields=name,price,ratingsAverage&limit=10&page=2
   // queryString example: 
   // {
   //   limit: '5',

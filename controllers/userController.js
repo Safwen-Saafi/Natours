@@ -10,16 +10,23 @@ const filterObj = (obj, ...allowedFields) => {
   });
   return newObj;
 };
+
+//  modifies the req.params.id to the current authenticated user's ID (req.user.id). 
+//  This is useful for routes that need to retrieve or manipulate data related to the currently logged-in
 exports.getMe = (req, res, next) => {
   req.params.id = req.user.id;
   next();
 };
 
 exports.getUser = factory.getOne(User);
+
 exports.getAllUsers = factory.getAll(User);
+
 // Do NOT update passwords with this!
 exports.updateUser = factory.updateOne(User);
+
 exports.deleteUser = factory.deleteOne(User);
+
 
 exports.createUser = (req, res) => {
   res.status(500).json({
@@ -27,6 +34,7 @@ exports.createUser = (req, res) => {
     message: 'This route is not defined! Please use /signup instead',
   });
 };
+
 
 exports.deleteMe = catchAsync(async (req, res, next) => {
   await User.findByIdAndUpdate(req.user.id, { active: false });
@@ -36,6 +44,7 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
     data: null,
   });
 });
+
 
 exports.updateMe = catchAsync(async (req, res, next) => {
   // 1) Create error if user POSTs password data

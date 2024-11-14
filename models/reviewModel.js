@@ -61,7 +61,7 @@ reviewSchema.statics.calcAverageRatings = async function(tourId) {
     }
   ]);
   // console.log(stats);
-  // stats basically is an array with the 3 elelents, if there are no reviews found then length 0
+  // stats basically is an array with the 3 elements, if there are no reviews found then length 0
   if (stats.length > 0) {
     await Tour.findByIdAndUpdate(tourId, {
       ratingsQuantity: stats[0].nRating,
