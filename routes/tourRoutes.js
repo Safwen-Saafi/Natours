@@ -38,7 +38,8 @@ router.route('/distances/:latlng/unit/:unit')
       .get(
         tourController.getDistances
        );
-
+//  All of the following routes are  restricted to admins only
+router.use(authController.restrictTo('admin', 'lead-guide'));
 router.route('/')
       .get(tourController.getAllTours)
       .post(

@@ -6,6 +6,8 @@ const sendEmail = require('./../utils/email');
 const { promisify } = require('util');
 const crypto = require('crypto');
 
+
+// Here's the creation of the jwt token, with the id as a payload
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
@@ -36,7 +38,6 @@ const createSendToken = (user, statusCode, res) => {
   });
 };
 
-
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
@@ -48,29 +49,21 @@ exports.signup = catchAsync(async (req, res, next) => {
   createSendToken(newUser, 201, res);
 });
 
-
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
-  
   // 1) Check if email and password exist in te req body
   if (!email || !password) {
     return next(new AppError('Please provide email and password!', 400));
   }
-
   // 2) Check if user exists && password is correct
   const user = await User.findOne({ email }).select('+password');
-
   // If user was not found we get "null"
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError('Incorrect email or password', 401));
   }
-
   // 3) If everything ok, send token to client
   createSendToken(user, 200, res);
 });
-
-
-
 
 exports.protect = catchAsync(async (req, res, next) => {
   // 1) Getting token and check if it's there
@@ -108,14 +101,10 @@ exports.protect = catchAsync(async (req, res, next) => {
       new AppError('User recently changed password! Please log in again.', 401)
     );
   }
-
   // GRANT ACCESS TO PROTECTED ROUTE
   req.user = currentUser;
   next();
 });
-
-
-
 
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
@@ -129,11 +118,6 @@ exports.restrictTo = (...roles) => {
   };
 };
 
-
-
-
-
-
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 1) Get user based on posted email
   const user = await User.findOne({ email: req.body.email });
@@ -143,7 +127,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
   // 2) Generate the random reset token
   const resetToken = user.createPasswordResetToken();
-  await user.save({ validateBeforeSave: false }); //useless to verify because we updated one field only
+  await user.save({ validateBeforeSave: false }); //useless to verify because we updated one field only the PasswordResetToken
   
   // 3) Send it to user's email
   const resetURL = `${req.protocol}://${req.get(
@@ -157,7 +141,6 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
       subject: 'Your password reset token (valid for 10 min)',
       message
     });
-
     res.status(200).json({
       status: 'success',
       message: 'Token sent to email!'
@@ -173,11 +156,6 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     );
   }
 });
-
-
-
-
-
 
 exports.resetPassword = catchAsync(async (req, res, next) => {
   // 1) Get user based on the token
@@ -197,34 +175,26 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   user.passwordConfirm = req.body.passwordConfirm;
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
-  await user.save();
-
-  // 3) Update changedPasswordAt property for the user
+  await user.save(); 
+  // 3) Update changedPasswordAt property for the user, you wonderin how it's done ?
+  // It's through the middleware in the user model, ther's a middleware to check if the password gets updated, if so
+  // update the changedPasswordAt field
   // 4) Log the user in, send JWT
   createSendToken(user, 200, res);
 });
 
-
-
-
-
-
-
 exports.updatePassword = catchAsync(async (req, res, next) => {
   // 1) Get user from collection
   const user = await User.findById(req.user.id).select('+password');
-
   // 2) Check if posted current password is correct
   if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
     return next(new AppError('Your current password is wrong.', 401));
   }
-
   // 3) If so, update password
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
   await user.save();
   // !User.findByIdAndUpdate will NOT work as intended! First validators won't run, second the pre middlewares to hash and changedAt won't work
-
   // 4) Log user in, send JWT
   createSendToken(user, 200, res);
 });

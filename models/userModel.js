@@ -47,7 +47,7 @@ const userSchema = new mongoose.Schema({
   active: {
     type: Boolean,
     default: true,
-    select: false,
+    select: false, // So that the active field won't be selected in future queries
   },
 });
 

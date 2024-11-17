@@ -19,14 +19,10 @@ exports.getMe = (req, res, next) => {
 };
 
 exports.getUser = factory.getOne(User);
-
 exports.getAllUsers = factory.getAll(User);
-
 // Do NOT update passwords with this!
 exports.updateUser = factory.updateOne(User);
-
 exports.deleteUser = factory.deleteOne(User);
-
 
 exports.createUser = (req, res) => {
   res.status(500).json({
@@ -34,7 +30,6 @@ exports.createUser = (req, res) => {
     message: 'This route is not defined! Please use /signup instead',
   });
 };
-
 
 exports.deleteMe = catchAsync(async (req, res, next) => {
   await User.findByIdAndUpdate(req.user.id, { active: false });
@@ -44,7 +39,6 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
     data: null,
   });
 });
-
 
 exports.updateMe = catchAsync(async (req, res, next) => {
   // 1) Create error if user POSTs password data
@@ -56,17 +50,14 @@ exports.updateMe = catchAsync(async (req, res, next) => {
       )
     );
   }
-
   // 2) Filtered out unwanted fields names that are not allowed to be updated
   // Why not using req.body to update, simply because a user can input the role to be updated which is what we don't want
   const filteredBody = filterObj(req.body, 'name', 'email');
-
   // 3) Update user document
   const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
     new: true,
     runValidators: true,
   });
-
   res.status(200).json({
     status: 'success',
     data: {

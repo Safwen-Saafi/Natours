@@ -1,6 +1,5 @@
 const AppError = require('./../utils/appError');
 
-
 // error occurs when you try to insert a record with a value in a field that is required to be unique 
 const handleDuplicateFieldsDB = (err) => {
   const regex = /dup key: \{ \w+: "(.*?)" \}/;

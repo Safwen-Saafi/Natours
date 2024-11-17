@@ -15,26 +15,12 @@ router.patch('/resetPassword/:token', authController.resetPassword);
 router.use(authController.protect);
 router.patch('/updateMe', userController.updateMe);
 router.delete('/deleteMe', userController.deleteMe);
-router.patch(
-  '/updateMyPassword',
-  authController.updatePassword
-);
-router.get(
-  '/me',
-  userController.getMe,
-  userController.getUser
-);
+router.patch('/updateMyPassword',authController.updatePassword);
+router.get('/me',userController.getMe,userController.getUser);
 
 //  All of the following routes are  restricted to admins only
 router.use(authController.restrictTo('admin'));
-router
-  .route('/')
-  .get(userController.getAllUsers)
-  .post(userController.createUser);
-router
-  .route('/:id')
-  .get(userController.getUser)
-  .patch(userController.updateUser)
-  .delete(userController.deleteUser);
+router.route('/').get(userController.getAllUsers).post(userController.createUser);
+router.route('/:id').get(userController.getUser).patch(userController.updateUser).delete(userController.deleteUser);
 
 module.exports = router;

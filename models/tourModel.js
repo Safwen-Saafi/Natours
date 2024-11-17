@@ -186,7 +186,7 @@ tourSchema.index({ startLocation: '2dsphere' });
 tourSchema.virtual('reviews', {
   ref: 'Review', //Name of the model we want to reference
   foreignField: 'tour', //We specify the id of the tour in the review model to connect
-  localField: '_id', //Where the id is stored in this model to match it with the previous field
+  localField: '_id', //Where the id is stored in this model to match it with the previous field, you won't find it here, accessible from mongoCompass
 });
 
 // !DOCUMENT MIDDLEWARE:
@@ -212,13 +212,12 @@ tourSchema.post(/^find/, function (next) {
 });
 
 // !Pre middleware to pupulate all of the guides, which means to replace the simple id with the whole document
-// explicitly store the ObjectIds in the guides array.
+// explicitly store the ObjectIds in the guides array, ths is child referencing
 tourSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'guides',
-    select: '-__v -passwordChangedAt', // Fields to exclude
+    select: '-__v -passwordChangedAt', // Fields to exclude from the guides field
   });
-
   next();
 });
 

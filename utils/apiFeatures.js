@@ -3,6 +3,7 @@ class APIFeatures {
     this.query = query;
     this.queryString = queryString;
   }
+
   // Example of a full query: /api/v1/tours?sort=-price&fields=name,price,ratingsAverage&limit=10&page=2
   // queryString example: 
   // {
@@ -12,8 +13,12 @@ class APIFeatures {
   // }
   // query: is the mongoose query
 
+  // URL: /api/v1/tours?price[gte]=500
+  // Before replace: {"price": {"gte": "500"}}
+  // After replace:  {"price": {"$gte": "500"}}
+  
   filter() {
-    const queryObj = { ...this.queryString };
+    const queryObj = { ...this.queryString };  //This makes a copy of the original querystring
     const excludedFields = ['page', 'sort', 'limit', 'fields'];
     excludedFields.forEach(el => delete queryObj[el]);
 
